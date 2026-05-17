@@ -7,7 +7,9 @@
     "dev": "bun run /src/index.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bcrypt": "^6.0.0",
+    "@types/bun": "latest",
+    "@types/jsonwebtoken": "^9.0.10"
   },
   "peerDependencies": {
     "typescript": "^5"
