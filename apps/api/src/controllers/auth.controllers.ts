@@ -2,8 +2,8 @@ import type { RequestHandler } from "express";
 import { authSchema } from "../types/authSchema";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import { USERS } from "../engine-store";
 import { jwtSecret } from "../utils/env";
+import prisma from "@repo/db/client"
 
 export const signup: RequestHandler = async (req, res) => {
   try {
@@ -15,7 +15,11 @@ export const signup: RequestHandler = async (req, res) => {
 
     const { username, password } = parsedBody.data;
 
-    const userAlreadyExists = USERS.find((user) => user.username);
+    const userAlreadyExists = await prisma.user.findUnique({
+      where: {
+        username,
+      },
+    });
 
     if (userAlreadyExists) {
       res.status(409).json({
@@ -25,29 +29,29 @@ export const signup: RequestHandler = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 5);
 
-    const newUser = {
-      userId: crypto.randomUUID(),
-      username,
-      password: hashedPassword,
-      collateral: {
-        available: 0,
-        locked: 0,
+    const user = await prisma.user.create({
+      data: {
+        username,
+        password: hashedPassword,
+        collateral: {
+          create: {
+            available: 0,
+            locked: 0,
+          },
+        },
       },
-      positions: [],
-      orders: [],
-    };
-
-    USERS.push(newUser);
+    });
 
     // console.log(USERS);
 
     res.status(201).json({
       message: "signedup successfully.",
-      userId: newUser.userId,
+      userId: user.id,
     });
   } catch (error) {
-    res.json({
-      error: `internal server error: ${error}`,
+    console.log(`internal server error: ${(error as Error).message}`);
+    res.status(500).json({
+      error: `internal server error: ${(error as Error).message}`,
     });
   }
 };
@@ -62,7 +66,11 @@ export const signin: RequestHandler = async (req, res) => {
 
     const { username, password } = parsedBody.data;
 
-    const existingUser = USERS.find((user) => user.username === username);
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        username,
+      },
+    });
 
     if (!existingUser) {
       res.status(404).json({
@@ -84,7 +92,7 @@ export const signin: RequestHandler = async (req, res) => {
 
     const token = jwt.sign(
       {
-        userId: existingUser.userId,
+        userId: existingUser.id,
       },
       jwtSecret,
     );
@@ -94,8 +102,9 @@ export const signin: RequestHandler = async (req, res) => {
       token,
     });
   } catch (error) {
-    res.json({
-      error: `internal server error: ${error}`,
+    console.log(`internal server error: ${(error as Error).message}`);
+    res.status(500).json({
+      error: `internal server error: ${(error as Error).message}`,
     });
   }
 };

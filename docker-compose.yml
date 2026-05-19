@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres
-    container_name: perps-postgres
+    container_name: postgres
     environment:
       POSTGRES_DB: perps
       POSTGRES_USER: user
@@ -12,7 +12,7 @@ services:
       - "5432:5432"
   redis:
     image: redis:latest
-    container_name: perps-redis
+    container_name: redis
     ports:
       - "6379:6379"
     volumes:

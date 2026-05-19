@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "start": "bun run /src/index.ts",
-    "dev": "bun run --hot /src/index.ts"
+    "dev": "bun run /src/index.ts"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -16,6 +16,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@repo/db": "workspace:*",
     "@types/express": "^5.0.6",
     "@types/ws": "^8.18.1",
     "bcrypt": "^6.0.0",

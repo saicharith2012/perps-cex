@@ -6,7 +6,7 @@ import type { RequestHandler } from "express";
 // get open orders
 
 export const createOrder: RequestHandler = async (req, res) => {
-  const userId = req.userId
+  const userId = req.userId;
   console.log(`creating order for ${userId}`);
 
   res.json({

@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Type {
+  SHORT
+  LONG
+}
+
+enum OrderType {
+  LIMIT
+  MARKET
+}
+
+enum OrderStatus {
+  OPEN
+  PARTIALLY_FILLED
+  FILLED
+  CANCELLED
+}
+
+model User {
+  id         String        @id @default(uuid())
+  username   String        @unique
+  password   String
+  collateral Collateral?
+  orders     OrderRecord[]
+  fills      Fill[]
+  positions  Position[]
+}
+
+model Collateral {
+  id        String @id @default(uuid())
+  available Int    @default(0)
+  locked    Int    @default(0)
+  userId    String @unique
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model OrderRecord {
+  id        String    @id @default(uuid())
+  market    String
+  type      Type
+  quantity  Int
+  margin    Int
+  orderType OrderType
+  price     Int
+  status    String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Fill {
+  id       String @id @default(uuid())
+  maker    String
+  taker    String
+  market   String
+  quantity Int
+  price    Int
+  long     Int
+  short    Int
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Position {
+  id               String @id @default(uuid())
+  market           String
+  type             Type
+  quantity         Int
+  margin           Int
+  liquidationPrice Int
+  pnL              Int
+  averagePrice     Int
+  userId           String
+  user             User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
