@@ -2,8 +2,9 @@ import type { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import { jwtSecret } from "../utils/env";
 import { USERS } from "../engine-store";
+import prisma from "@repo/db/client";
 
-export const authenticateUser: RequestHandler = (req, res, next) => {
+export const authenticateUser: RequestHandler = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.replace("Bearer ", "");
 
@@ -18,7 +19,11 @@ export const authenticateUser: RequestHandler = (req, res, next) => {
 
     const { userId } = decodedToken as jwt.JwtPayload;
 
-    const existingUser = USERS.find((user) => user.userId === userId);
+    const existingUser = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
 
     if (!existingUser) {
       res.status(401).json({
@@ -28,6 +33,7 @@ export const authenticateUser: RequestHandler = (req, res, next) => {
     }
 
     req.userId = userId;
+
 
     next();
   } catch (error) {

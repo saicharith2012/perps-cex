@@ -31,7 +31,7 @@ model User {
   collateral Collateral?
   orders     OrderRecord[]
   fills      Fill[]
-  positions  Position[]
+  positions  PositionRecord[]
 }
 
 model Collateral {
@@ -68,7 +68,7 @@ model Fill {
   user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model Position {
+model PositionRecord {
   id               String @id @default(uuid())
   market           String
   type             Type

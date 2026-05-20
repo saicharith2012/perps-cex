@@ -10,7 +10,7 @@ export const createOrder: RequestHandler = async (req, res) => {
   console.log(`creating order for ${userId}`);
 
   res.json({
-    message: `create order logic not implemented yet. please wait ${userId}`,
+    message: `create order logic not implemented yet. please wait...`,
   });
 };
 
