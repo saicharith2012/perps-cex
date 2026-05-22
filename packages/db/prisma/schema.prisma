@@ -25,58 +25,60 @@ enum OrderStatus {
 }
 
 model User {
-  id         String        @id @default(uuid())
-  username   String        @unique
-  password   String
-  collateral Collateral?
-  orders     OrderRecord[]
-  fills      Fill[]
-  positions  PositionRecord[]
-}
-
-model Collateral {
-  id        String @id @default(uuid())
-  available Int    @default(0)
-  locked    Int    @default(0)
-  userId    String @unique
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String           @id @default(uuid())
+  username    String           @unique
+  password    String
+  orders      OrderRecord[]
+  maker_fills Fill[]           @relation("maker_user")
+  taker_fills Fill[]           @relation("taker_user")
+  positions   PositionRecord[]
 }
 
 model OrderRecord {
-  id        String    @id @default(uuid())
-  market    String
-  type      Type
-  quantity  Int
-  margin    Int
-  orderType OrderType
-  price     Int
-  status    String
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String    @id @default(uuid())
+  market      String
+  type        Type
+  quantity    Int
+  margin      Int
+  leverage    Int
+  orderType   OrderType
+  price       Int
+  slippage    Int?
+  status      String
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  maker_fills Fill[]    @relation("maker_order")
+  taker_fills Fill[]    @relation("taker_order")
 }
 
 model Fill {
-  id       String @id @default(uuid())
-  maker    String
-  taker    String
-  market   String
-  quantity Int
-  price    Int
-  long     Int
-  short    Int
-  userId   String
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String      @id @default(uuid())
+  maker          String
+  taker          String
+  market         String
+  quantity       Int
+  price          Int
+  long           Int
+  short          Int
+  userId         String
+  maker_order_id String
+  taker_order_id String
+  maker_order    OrderRecord @relation("maker_order", fields: [maker_order_id], references: [id])
+  taker_order    OrderRecord @relation("taker_order", fields: [taker_order_id], references: [id])
+  makerUser      User        @relation("maker_user", fields: [maker], references: [id])
+  takerUser      User        @relation("taker_user", fields: [taker], references: [id])
 }
 
 model PositionRecord {
   id               String @id @default(uuid())
   market           String
   type             Type
-  quantity         Int
+  positionSize     Int
   margin           Int
   liquidationPrice Int
-  pnL              Int
+  realisedPnL      Int
   averagePrice     Int
   userId           String
+  equity           Int
   user             User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
