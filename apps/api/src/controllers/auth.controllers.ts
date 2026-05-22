@@ -3,14 +3,17 @@ import { authSchema } from "../types/authSchema";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { jwtSecret } from "../utils/env";
-import prisma from "@repo/db/client"
+import prisma from "@repo/db/client";
+import { sendValidationError } from "../utils/validation";
 
 export const signup: RequestHandler = async (req, res) => {
   try {
     const parsedBody = authSchema.safeParse(req.body);
 
     if (!parsedBody.success) {
-      throw new Error(parsedBody.error.issues[0]?.message);
+      sendValidationError(res, parsedBody.error);
+      console.log(parsedBody.error);
+      return;
     }
 
     const { username, password } = parsedBody.data;
@@ -39,6 +42,15 @@ export const signup: RequestHandler = async (req, res) => {
             locked: 0,
           },
         },
+        positions: {
+          create: []
+        },
+        fills: {
+          create: []
+        },
+        orders: {
+          create: []
+        }
       },
     });
 
@@ -49,9 +61,11 @@ export const signup: RequestHandler = async (req, res) => {
       userId: user.id,
     });
   } catch (error) {
-    console.log(`internal server error: ${(error as Error).message}`);
+    console.log(
+      error instanceof Error ? error.message : `internal server error`,
+    );
     res.status(500).json({
-      error: `internal server error: ${(error as Error).message}`,
+      error: error instanceof Error ? error.message : `internal server error`,
     });
   }
 };
@@ -61,7 +75,9 @@ export const signin: RequestHandler = async (req, res) => {
     const parsedBody = authSchema.safeParse(req.body);
 
     if (!parsedBody.success) {
-      throw new Error(parsedBody.error.issues[0]?.message);
+      sendValidationError(res, parsedBody.error);
+      console.log(parsedBody.error);
+      return;
     }
 
     const { username, password } = parsedBody.data;
@@ -102,9 +118,11 @@ export const signin: RequestHandler = async (req, res) => {
       token,
     });
   } catch (error) {
-    console.log(`internal server error: ${(error as Error).message}`);
+    console.log(
+      error instanceof Error ? error.message : `internal server error`,
+    );
     res.status(500).json({
-      error: `internal server error: ${(error as Error).message}`,
+      error: error instanceof Error ? error.message : `internal server error`,
     });
   }
 };

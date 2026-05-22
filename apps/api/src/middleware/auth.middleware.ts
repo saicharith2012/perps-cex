@@ -1,7 +1,7 @@
 import type { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import { jwtSecret } from "../utils/env";
-import { USERS } from "../engine-store";
+import { USERS } from "../utils/engine-client";
 import prisma from "@repo/db/client";
 
 export const authenticateUser: RequestHandler = async (req, res, next) => {

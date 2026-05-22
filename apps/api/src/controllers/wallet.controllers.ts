@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import { onrampFundsSchema } from "../types/walletSchema";
-import { USERS } from "../engine-store";
+import prisma from "@repo/db/client";
+import { sendValidationError } from "../utils/validation";
 
 export const onrampFunds: RequestHandler = async (req, res) => {
   try {
@@ -9,26 +10,41 @@ export const onrampFunds: RequestHandler = async (req, res) => {
     const parsedBody = onrampFundsSchema.safeParse(req.body);
 
     if (!parsedBody.success) {
-      throw new Error(parsedBody.error.issues[0]?.message);
+      sendValidationError(res, parsedBody.error)
+      console.log(parsedBody.error)
+      return
     }
 
     const { amount } = parsedBody.data;
 
-    const user = USERS.find((user) => user.userId === userId);
+    const existingUser = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
 
-    if (!user) {
+    if (!existingUser) {
       res.status(403).json({
         error: "forbidden request.",
       });
       return;
     }
 
-    user.collateral.available += amount;
+    const collateral = await prisma.collateral.update({
+      where: {
+        userId,
+      },
+      data: {
+        available: {
+          increment: amount,
+        },
+      },
+    });
 
     res.status(200).json({
       message: "user balance onramped successfully.",
-      userId: user.userId,
-      collateral: user.collateral
+      userId,
+      collateral: collateral,
     });
   } catch (error) {
     res.status(500).json({
