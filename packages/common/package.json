@@ -1,19 +1,15 @@
 {
-  "name": "engine",
+  "name": "@repo/common",
   "module": "index.ts",
   "type": "module",
   "private": true,
-  "scripts": {
-    "dev": "bun run index.ts",
-    "start": "bun run index.ts"
-  },
   "devDependencies": {
     "@types/bun": "latest"
   },
-  "dependencies": {
-    "@repo/common": "workspace:*"
-  },
   "peerDependencies": {
     "typescript": "^5"
+  }, 
+  "exports": {
+    "./engineTypes": "./index.ts"
   }
 }

@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@repo/db": "workspace:*",
+    "@repo/common": "workspace:*",
     "@types/express": "^5.0.6",
     "@types/ws": "^8.18.1",
     "bcrypt": "^6.0.0",
