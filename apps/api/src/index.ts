@@ -5,10 +5,13 @@ import ordersRouter from "./routes/orders.routes";
 import walletRouter from "./routes/wallet.routes";
 import positionsRouter from "./routes/positions.routes";
 import fillsRouter from "./routes/fills.routes";
+import { connectRedis, pingRedis } from "./utils/engine-client";
 
 const app = express();
 
 app.use(express.json());
+
+connectRedis()
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/orders", ordersRouter);

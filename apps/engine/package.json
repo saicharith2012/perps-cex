@@ -11,7 +11,8 @@
     "@types/bun": "latest"
   },
   "dependencies": {
-    "@repo/common": "workspace:*"
+    "@repo/common": "workspace:*",
+    "redis": "^5.12.1"
   },
   "peerDependencies": {
     "typescript": "^5"
