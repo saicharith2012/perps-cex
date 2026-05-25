@@ -32,6 +32,8 @@ model User {
   maker_fills Fill[]           @relation("maker_user")
   taker_fills Fill[]           @relation("taker_user")
   positions   PositionRecord[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt()
 }
 
 model OrderRecord {
@@ -49,6 +51,8 @@ model OrderRecord {
   user        User      @relation(fields: [userId], references: [id])
   maker_fills Fill[]    @relation("maker_order")
   taker_fills Fill[]    @relation("taker_order")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Fill {
@@ -67,10 +71,11 @@ model Fill {
   taker_order    OrderRecord @relation("taker_order", fields: [taker_order_id], references: [id])
   makerUser      User        @relation("maker_user", fields: [maker], references: [id])
   takerUser      User        @relation("taker_user", fields: [taker], references: [id])
+  createdAt      DateTime    @default(now())
 }
 
 model PositionRecord {
-  id               String @id @default(uuid())
+  id               String   @id @default(uuid())
   market           String
   type             Type
   positionSize     Int
@@ -80,5 +85,6 @@ model PositionRecord {
   averagePrice     Int
   userId           String
   equity           Int
-  user             User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User     @relation(fields: [userId], references: [id])
+  createdAt        DateTime @default(now())
 }
