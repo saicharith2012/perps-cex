@@ -54,7 +54,7 @@ export const onrampFunds: RequestHandler = async (req, res) => {
             currentBalance: (engineResponse.data as OnrampBalanceResponse)
               .currentBalance,
           } as OnrampBalanceResponse)
-        : { error: "error while onramping balance" },
+        : { error: `error while onramping balance: ${engineResponse.error}` },
     );
   } catch (error) {
     console.log(

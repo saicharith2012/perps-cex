@@ -62,10 +62,12 @@ export const signup: RequestHandler = async (req, res) => {
     res.status(engineResponse.ok ? 200 : 400).json(
       engineResponse.ok
         ? {
-            message: "signedup successfully.",
+            message: `signedup successfully. ${engineResponse.data?.message}`,
             userId: user.id,
           }
-        : { error: "error while initiating user on the exchange" },
+        : {
+            error: `error while initiating user on the exchange: ${engineResponse.error}`,
+          },
     );
   } catch (error) {
     console.log(
@@ -116,6 +118,7 @@ export const signin: RequestHandler = async (req, res) => {
     const token = jwt.sign(
       {
         userId: existingUser.id,
+        role: existingUser.role,
       },
       jwtSecret,
     );

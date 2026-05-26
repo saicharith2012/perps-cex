@@ -3,6 +3,7 @@ export enum EngineCommandType {
   ONRAMP_BALANCE = "ONRAMP_BALANCE",
   CREATE_MARKET = "CREATE_MARKET",
   INITIATE_USER = "INITIATE_USER",
+  
 }
 
 export type OnrampBalanceInput = {
@@ -35,8 +36,13 @@ export type OnrampBalanceResponse = {
   currentBalance: Collateral
 }
 
+export type CreateMarketResponse = {
+  message: string,
+  orderbook: Orderbook
+}
+
 export type EngineResponse = {
-  data?: InitiateUserResponse | OnrampBalanceResponse;
+  data?: InitiateUserResponse | OnrampBalanceResponse | CreateMarketResponse;
   error?: string;
   correlationId: string;
   ok: boolean

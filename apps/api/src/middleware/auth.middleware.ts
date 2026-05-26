@@ -32,12 +32,29 @@ export const authenticateUser: RequestHandler = async (req, res, next) => {
     }
 
     req.userId = userId;
-
+    req.role = existingUser.role;
 
     next();
   } catch (error) {
     res.status(401).json({
-      error: `unauthorised user: ${error}`,
+      error: `internal server error: ${error}`,
+    });
+  }
+};
+
+export const authorizeAdmin: RequestHandler = async (req, res, next) => {
+  try {
+
+    if (req.role === "ADMIN") {
+      next();
+    } else {
+      res.status(403).json({
+        error: `403 forbidden.`,
+      });
+    }
+  } catch (error) {
+    res.status(403).json({
+      error: `internal server error: ${error}`,
     });
   }
 };

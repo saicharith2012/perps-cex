@@ -7,7 +7,12 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Type {
+enum Side {
+  BUY
+  SELL
+}
+
+enum PositionType {
   SHORT
   LONG
 }
@@ -24,10 +29,16 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
   id          String           @id @default(uuid())
   username    String           @unique
   password    String
+  role        Role             @default(USER)
   orders      OrderRecord[]
   maker_fills Fill[]           @relation("maker_user")
   taker_fills Fill[]           @relation("taker_user")
@@ -39,7 +50,7 @@ model User {
 model OrderRecord {
   id          String    @id @default(uuid())
   market      String
-  type        Type
+  side        Side
   quantity    Int
   margin      Int
   leverage    Int
@@ -75,9 +86,9 @@ model Fill {
 }
 
 model PositionRecord {
-  id               String   @id @default(uuid())
+  id               String       @id @default(uuid())
   market           String
-  type             Type
+  type             PositionType
   positionSize     Int
   margin           Int
   liquidationPrice Int
@@ -85,6 +96,12 @@ model PositionRecord {
   averagePrice     Int
   userId           String
   equity           Int
-  user             User     @relation(fields: [userId], references: [id])
-  createdAt        DateTime @default(now())
+  user             User         @relation(fields: [userId], references: [id])
+  createdAt        DateTime     @default(now())
+}
+
+model Market {I
+  id       String @id @default(uuid())
+  marketId String @unique
+  imageUrl String
 }
