@@ -21,9 +21,6 @@ export type Collateral = {
   locked: number
 }
 
-// marketId as key
-export type Balance = Record<string, Collateral>
-
 export type PositionType = "SHORT" | "LONG"
 
 
@@ -46,7 +43,7 @@ export type Position = {
 export const ORDERBOOKS = new Map<string, Orderbook>()
 
 // userId as key
-export const BALANCES = new Map<string, Balance>()
+export const BALANCES = new Map<string, Collateral>()
 
 // userId as key for map, marketId as key for record
 export const POSITIONS = new Map<string, Record<string, Position>>()
