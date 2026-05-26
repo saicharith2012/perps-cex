@@ -2,17 +2,29 @@ import type { RequestHandler } from "express";
 import { onrampFundsSchema } from "../types/walletSchema";
 import prisma from "@repo/db/client";
 import { sendValidationError } from "../utils/validation";
+import { sendToEngine } from "../utils/engine-client";
+import {
+  EngineCommandType,
+  type OnrampBalanceResponse,
+} from "@repo/common/engineTypes";
 
 export const onrampFunds: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId;
 
+    if (!userId) {
+      res.status(401).json({
+        error: "unauthorized.",
+      });
+      return;
+    }
+
     const parsedBody = onrampFundsSchema.safeParse(req.body);
 
     if (!parsedBody.success) {
-      sendValidationError(res, parsedBody.error)
-      console.log(parsedBody.error)
-      return
+      sendValidationError(res, parsedBody.error);
+      console.log(parsedBody.error);
+      return;
     }
 
     const { amount } = parsedBody.data;
@@ -30,25 +42,26 @@ export const onrampFunds: RequestHandler = async (req, res) => {
       return;
     }
 
-    const collateral = await prisma.collateral.update({
-      where: {
-        userId,
-      },
-      data: {
-        available: {
-          increment: amount,
-        },
-      },
+    const engineResponse = await sendToEngine({
+      type: String(EngineCommandType.ONRAMP_BALANCE),
+      payload: { userId, amount: String(amount) },
     });
 
-    res.status(200).json({
-      message: "user balance onramped successfully.",
-      userId,
-      collateral: collateral,
-    });
+    res.status(engineResponse.ok ? 200 : 400).json(
+      engineResponse.ok
+        ? ({
+            message: engineResponse.data?.message,
+            currentBalance: (engineResponse.data as OnrampBalanceResponse)
+              .currentBalance,
+          } as OnrampBalanceResponse)
+        : { error: "error while onramping balance" },
+    );
   } catch (error) {
+    console.log(
+      error instanceof Error ? error.message : `internal server error`,
+    );
     res.status(500).json({
-      error: `internal server error: ${error}`,
+      error: error instanceof Error ? error.message : `internal server error`,
     });
   }
 };

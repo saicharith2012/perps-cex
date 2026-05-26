@@ -44,4 +44,6 @@ export async function resolveEngineResponse(
   clearTimeout(pending.timeout);
   PENDING_RESPONSES.delete(response.correlationId);
   pending.resolve(response);
+
+  console.log(PENDING_RESPONSES);
 }

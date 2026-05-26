@@ -1,43 +1,4 @@
-export type Orders = {
-  availableQty: number,
-  openOrder: {
-    orderId: string,
-    qty: number,
-    filledQty: number,
-    userId: string,
-    createdAt: string
-  }[]
-}
-
-export type Orderbook = {
-  asks: Record<number, Orders>, // price as key
-  bids: Record<number, Orders>,
-  lastTradedPrice: number
-  indexPrice: number
-}
-
-export type Collateral = {
-  available: number, 
-  locked: number
-}
-
-export type PositionType = "SHORT" | "LONG"
-
-
-export type Position = {
-  positionId: string,
-  userId: string,
-  marketId: string,
-  type: PositionType,
-  margin: number,
-  entryPrice: number,
-  leverage: number,
-  qty: number,
-  liquidationPrice: number,
-  unrealizedPnL: number,
-  realizedPnL: number,
-  createdAt: string
-}
+import type { Collateral, Orderbook, Position } from "@repo/common/engineTypes"
 
 // marketId as key
 export const ORDERBOOKS = new Map<string, Orderbook>()

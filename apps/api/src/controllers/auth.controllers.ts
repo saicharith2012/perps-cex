@@ -65,7 +65,7 @@ export const signup: RequestHandler = async (req, res) => {
             message: "signedup successfully.",
             userId: user.id,
           }
-        : { error: "error while initiating user balance on engine" },
+        : { error: "error while initiating user on the exchange" },
     );
   } catch (error) {
     console.log(

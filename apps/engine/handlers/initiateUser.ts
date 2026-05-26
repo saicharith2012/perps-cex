@@ -18,7 +18,7 @@ export function initiateUser(
   return {
     correlationId,
     data: {
-      message: `user ${payload.userId} successfully initiated on the market.`,
+      message: `user ${payload.userId} successfully initiated on the exchange.`,
     },
     ok: true,
   };

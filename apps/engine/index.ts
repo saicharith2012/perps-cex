@@ -10,9 +10,11 @@ import {
   type EngineRequest,
   type EngineResponse,
   type InitiateUserInput,
+  type OnrampBalanceInput,
   type RedisStreamMessageType,
 } from "@repo/common/engineTypes";
 import { initiateUser } from "./handlers/initiateUser";
+import { onrampBalance } from "./handlers/onrampBalance";
 
 const publisher = createClient({ url: redisUrl }).on("error", (e) =>
   console.error("redis client error.", e),
@@ -53,6 +55,11 @@ function handleEngineRequest(message: EngineRequest, correlationId: string) {
   switch (message.type) {
     case String(EngineCommandType.INITIATE_USER):
       return initiateUser(message.payload as InitiateUserInput, correlationId);
+    case String(EngineCommandType.ONRAMP_BALANCE):
+      return onrampBalance(
+        message.payload as OnrampBalanceInput,
+        correlationId,
+      );
     default:
       throw new Error("unknown engine request type.");
   }
