@@ -5,6 +5,8 @@ import bcrypt from "bcrypt";
 import { jwtSecret } from "../utils/env";
 import prisma from "@repo/db/client";
 import { sendValidationError } from "../utils/validation";
+import { sendToEngine } from "../utils/engine-client";
+import { EngineCommandType } from "@repo/common/engineTypes";
 
 export const signup: RequestHandler = async (req, res) => {
   try {
@@ -36,30 +38,35 @@ export const signup: RequestHandler = async (req, res) => {
       data: {
         username,
         password: hashedPassword,
-        collateral: {
-          create: {
-            available: 0,
-            locked: 0,
-          },
-        },
         positions: {
-          create: []
+          create: [],
         },
-        fills: {
-          create: []
+        maker_fills: {
+          create: [],
+        },
+        taker_fills: {
+          create: [],
         },
         orders: {
-          create: []
-        }
+          create: [],
+        },
       },
     });
 
-    // console.log(USERS);
-
-    res.status(201).json({
-      message: "signedup successfully.",
-      userId: user.id,
+    console.log("sending request to engine to initiate user balance");
+    const engineResponse = await sendToEngine({
+      type: String(EngineCommandType.INITIATE_USER),
+      payload: { userId: user.id },
     });
+
+    res.status(engineResponse.ok ? 200 : 400).json(
+      engineResponse.ok
+        ? {
+            message: "signedup successfully.",
+            userId: user.id,
+          }
+        : { error: "error while initiating user balance on engine" },
+    );
   } catch (error) {
     console.log(
       error instanceof Error ? error.message : `internal server error`,
