@@ -48,34 +48,33 @@ model User {
 }
 
 model OrderRecord {
-  id          String    @id @default(uuid())
-  market      String
-  side        Side
-  quantity    Int
-  margin      Int
-  leverage    Int
-  orderType   OrderType
-  price       Int
-  slippage    Int?
-  status      String
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
-  maker_fills Fill[]    @relation("maker_order")
-  taker_fills Fill[]    @relation("taker_order")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String    @id @default(uuid())
+  marketId      String
+  side          Side
+  qty           String
+  initialMargin String
+  leverage      String
+  orderType     OrderType
+  price         String
+  slippage      String?
+  status        String
+  filledQty     String
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  maker_fills   Fill[]    @relation("maker_order")
+  taker_fills   Fill[]    @relation("taker_order")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  market        Market    @relation(fields: [marketId], references: [marketId])
 }
 
 model Fill {
   id             String      @id @default(uuid())
   maker          String
   taker          String
-  market         String
-  quantity       Int
-  price          Int
-  long           Int
-  short          Int
-  userId         String
+  marketId       String
+  qty            String
+  price          String
   maker_order_id String
   taker_order_id String
   maker_order    OrderRecord @relation("maker_order", fields: [maker_order_id], references: [id])
@@ -83,25 +82,30 @@ model Fill {
   makerUser      User        @relation("maker_user", fields: [maker], references: [id])
   takerUser      User        @relation("taker_user", fields: [taker], references: [id])
   createdAt      DateTime    @default(now())
+  market         Market      @relation(fields: [marketId], references: [marketId])
 }
 
 model PositionRecord {
   id               String       @id @default(uuid())
-  market           String
+  marketId         String
   type             PositionType
-  positionSize     Int
-  margin           Int
-  liquidationPrice Int
-  realisedPnL      Int
-  averagePrice     Int
+  positionSize     String
+  margin           String
+  liquidationPrice String
+  realisedPnL      String
+  averagePrice     String
   userId           String
-  equity           Int
+  equity           String
   user             User         @relation(fields: [userId], references: [id])
   createdAt        DateTime     @default(now())
+  market           Market       @relation(fields: [marketId], references: [marketId])
 }
 
-model Market {I
-  id       String @id @default(uuid())
-  marketId String @unique
-  imageUrl String
+model Market {
+  id              String           @id @default(uuid())
+  marketId        String           @unique
+  imageUrl        String
+  orders          OrderRecord[]
+  fills           Fill[]
+  positionRecords PositionRecord[]
 }
