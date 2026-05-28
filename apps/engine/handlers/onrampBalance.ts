@@ -2,7 +2,7 @@ import type {
   EngineResponse,
   OnrampBalanceInput,
 } from "@repo/common/engineTypes";
-import { BALANCES } from "../engineStore";
+import { BALANCES } from "../store/engineStore";
 
 export function onrampBalance(
   message: OnrampBalanceInput,

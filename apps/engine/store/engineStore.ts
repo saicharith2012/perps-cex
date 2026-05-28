@@ -7,4 +7,4 @@ export const ORDERBOOKS = new Map<string, Orderbook>()
 export const BALANCES = new Map<string, Collateral>()
 
 // userId as key for map, marketId as key for record
-export const POSITIONS = new Map<string, Record<string, Position>>()
+export const POSITIONS = new Map<string, Map<string, Position>>()

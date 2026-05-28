@@ -89,6 +89,8 @@ export async function listenForResponsesFromEngine(): Promise<void> {
         continue;
       }
 
+      // console.log(response)
+
       const { correlationId, ...message } = response[0]?.messages[0]?.message;
 
       if (!correlationId) {

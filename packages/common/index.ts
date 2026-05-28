@@ -3,8 +3,15 @@ export enum EngineCommandType {
   ONRAMP_BALANCE = "ONRAMP_BALANCE",
   CREATE_MARKET = "CREATE_MARKET",
   INITIATE_USER = "INITIATE_USER",
-  
 }
+
+export type Side = "BUY" | "SELL";
+
+export type OrderType = "LIMIT" | "MARKET";
+
+export type OrderStatus = "OPEN" | "PARTIALLY_FILLED" | "FILLED" | "CANCELLED";
+
+export type PositionType = "SHORT" | "LONG";
 
 export type OnrampBalanceInput = {
   userId: string;
@@ -19,33 +26,70 @@ export type InitiateUserInput = {
   userId: string;
 };
 
-export type EngineRequest = {
-  type: string,
-  correlationId: string,
-  payload: OnrampBalanceInput | CreateMarketInput | InitiateUserInput
-}
+export type CreateOrderInput = {
+  orderId: string;
+  userId: string;
+  marketId: string;
+  type: OrderType;
+  side: Side;
+  price: number | null;
+  qty: number;
+  margin: number;
+  leverage: number;
+  slippage: number | null;
+};
 
-export type EngineRequestWithoutCorrelationId = Omit<EngineRequest, "correlationId">
+export type EngineRequest = {
+  type: string;
+  correlationId: string;
+  payload:
+    | CreateOrderInput
+    | OnrampBalanceInput
+    | CreateMarketInput
+    | InitiateUserInput;
+};
+
+export type EngineRequestWithoutCorrelationId = Omit<
+  EngineRequest,
+  "correlationId"
+>;
 
 export type InitiateUserResponse = {
-  message: string
-}
+  message: string;
+};
 
 export type OnrampBalanceResponse = {
-  message: string,
-  currentBalance: Collateral
-}
+  message: string;
+  currentBalance: Collateral;
+};
 
 export type CreateMarketResponse = {
-  message: string,
-  orderbook: Orderbook
-}
+  message: string;
+  orderbook: Orderbook;
+};
+
+export type CreateOrderResponse = {
+  message: string;
+  orderId: string;
+  userId: string;
+  marketId: string;
+  averagePrice: number;
+  status: OrderStatus;
+  remainingQty: number;
+  filledQty: number;
+  fills: Fill[];
+  position: Position[];
+};
 
 export type EngineResponse = {
-  data?: InitiateUserResponse | OnrampBalanceResponse | CreateMarketResponse;
+  data?:
+    | CreateOrderResponse
+    | InitiateUserResponse
+    | OnrampBalanceResponse
+    | CreateMarketResponse;
   error?: string;
   correlationId: string;
-  ok: boolean
+  ok: boolean;
 };
 
 export type RedisStreamMessageType = {
@@ -60,46 +104,54 @@ export type RedisStreamMessageType = {
   }[];
 }[];
 
-
 // engine store types
 
 export type Orders = {
-  availableQty: number,
-  openOrder: {
-    orderId: string,
-    qty: number,
-    filledQty: number,
-    userId: string,
-    createdAt: string
-  }[]
-}
+  availableQty: number;
+  openOrders: {
+    orderId: string;
+    qty: number;
+    filledQty: number;
+    userId: string;
+    createdAt: number;
+  }[];
+};
 
 export type Orderbook = {
-  asks: Record<number, Orders>, // price as key
-  bids: Record<number, Orders>,
-  lastTradedPrice: number
-  indexPrice: number
-}
+  asks: Map<number, Orders>; // price as key
+  bids: Map<number, Orders>;
+  lastTradedPrice: number;
+  indexPrice: number;
+};
 
 export type Collateral = {
-  available: number, 
-  locked: number
-}
-
-export type PositionType = "SHORT" | "LONG"
-
+  available: number;
+  locked: number;
+};
 
 export type Position = {
-  positionId: string,
-  userId: string,
-  marketId: string,
-  type: PositionType,
-  margin: number,
-  entryPrice: number,
-  leverage: number,
-  qty: number,
-  liquidationPrice: number,
-  unrealizedPnL: number,
-  realizedPnL: number,
-  createdAt: string
-}
+  positionId: string;
+  userId: string;
+  marketId: string;
+  type: PositionType;
+  margin: number;
+  entryPrice: number;
+  leverage: number;
+  qty: number;
+  liquidationPrice: number;
+  unrealizedPnL: number;
+  realizedPnL: number;
+  createdAt: string;
+};
+
+export type Fill = {
+  fillId: string;
+  maker: string;
+  taker: string;
+  marketId: string;
+  qty: string;
+  price: string;
+  makerOrderId: string;
+  takerOrderId: string;
+  createdAt: string;
+};

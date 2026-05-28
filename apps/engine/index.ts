@@ -8,6 +8,7 @@ import {
 import {
   EngineCommandType,
   type CreateMarketInput,
+  type CreateOrderInput,
   type EngineRequest,
   type EngineResponse,
   type InitiateUserInput,
@@ -17,6 +18,7 @@ import {
 import { initiateUser } from "./handlers/initiateUser";
 import { onrampBalance } from "./handlers/onrampBalance";
 import { createMarket } from "./handlers/createMarket";
+import { createOrder } from "./handlers/createOrder";
 
 const publisher = createClient({ url: redisUrl }).on("error", (e) =>
   console.error("redis client error.", e),
@@ -64,6 +66,8 @@ function handleEngineRequest(message: EngineRequest, correlationId: string) {
       );
     case String(EngineCommandType.CREATE_MARKET):
       return createMarket(message.payload as CreateMarketInput, correlationId);
+    case String(EngineCommandType.CREATE_ORDER):
+      return createOrder(message.payload as CreateOrderInput, correlationId);
     default:
       throw new Error("unknown engine request type.");
   }
