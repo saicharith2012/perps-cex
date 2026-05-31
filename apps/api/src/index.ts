@@ -12,6 +12,7 @@ import {
   pingRedis,
 } from "./utils/engine-client";
 import { authenticateUser, authorizeAdmin } from "./middleware/auth.middleware";
+import { resetEngine } from "./controllers/reset.controllers";
 
 const app = express();
 
@@ -26,6 +27,9 @@ app.use("/api/v1/wallet", walletRouter);
 app.use("/api/v1/positions", positionsRouter);
 app.use("/api/v1/fills", fillsRouter);
 app.use("/api/v1/market", marketRouter)
+
+// endpoint to reset engine - testing purposes (:/)
+app.post("/api/v1/reset", authenticateUser, authorizeAdmin, resetEngine)
 
 
 app.listen(port, () => {

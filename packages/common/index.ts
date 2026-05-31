@@ -3,6 +3,7 @@ export enum EngineCommandType {
   ONRAMP_BALANCE = "ONRAMP_BALANCE",
   CREATE_MARKET = "CREATE_MARKET",
   INITIATE_USER = "INITIATE_USER",
+  RESET_ENGINE = "RESET_ENGINE",
 }
 
 export type Side = "BUY" | "SELL";
@@ -41,6 +42,8 @@ export type CreateOrderInput = {
   slippage: number | null;
 };
 
+export type ResetEngineInput = {};
+
 export type EngineRequest = {
   type: string;
   correlationId: string;
@@ -48,7 +51,8 @@ export type EngineRequest = {
     | CreateOrderInput
     | OnrampBalanceInput
     | CreateMarketInput
-    | InitiateUserInput;
+    | InitiateUserInput
+    | ResetEngineInput;
 };
 
 export type EngineRequestWithoutCorrelationId = Omit<
@@ -85,12 +89,17 @@ export type CreateOrderResponse = {
   takerPosition: Position | null;
 };
 
+export type resetEngineResponse = {
+  message: string;
+};
+
 export type EngineResponse = {
   data?:
     | CreateOrderResponse
     | InitiateUserResponse
     | OnrampBalanceResponse
-    | CreateMarketResponse;
+    | CreateMarketResponse
+    | resetEngineResponse;
   error?: string;
   correlationId: string;
   ok: boolean;

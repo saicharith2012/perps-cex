@@ -60,12 +60,12 @@ model OrderRecord {
   status        String
   filledQty     String
   userId        String
-  user          User      @relation(fields: [userId], references: [id])
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   maker_fills   Fill[]    @relation("maker_order")
   taker_fills   Fill[]    @relation("taker_order")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  market        Market    @relation(fields: [marketId], references: [marketId])
+  market        Market    @relation(fields: [marketId], references: [marketId], onDelete: Cascade)
 }
 
 model Fill {
@@ -77,12 +77,12 @@ model Fill {
   price          String
   maker_order_id String
   taker_order_id String
-  maker_order    OrderRecord @relation("maker_order", fields: [maker_order_id], references: [id])
-  taker_order    OrderRecord @relation("taker_order", fields: [taker_order_id], references: [id])
-  makerUser      User        @relation("maker_user", fields: [maker], references: [id])
-  takerUser      User        @relation("taker_user", fields: [taker], references: [id])
+  maker_order    OrderRecord @relation("maker_order", fields: [maker_order_id], references: [id], onDelete: Cascade)
+  taker_order    OrderRecord @relation("taker_order", fields: [taker_order_id], references: [id], onDelete: Cascade)
+  makerUser      User        @relation("maker_user", fields: [maker], references: [id], onDelete: Cascade)
+  takerUser      User        @relation("taker_user", fields: [taker], references: [id], onDelete: Cascade)
   createdAt      DateTime    @default(now())
-  market         Market      @relation(fields: [marketId], references: [marketId])
+  market         Market      @relation(fields: [marketId], references: [marketId], onDelete: Cascade)
 }
 
 model PositionRecord {
@@ -96,9 +96,9 @@ model PositionRecord {
   averagePrice     String
   userId           String
   equity           String
-  user             User         @relation(fields: [userId], references: [id])
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt        DateTime     @default(now())
-  market           Market       @relation(fields: [marketId], references: [marketId])
+  market           Market       @relation(fields: [marketId], references: [marketId], onDelete: Cascade)
 }
 
 model Market {

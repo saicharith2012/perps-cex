@@ -65,6 +65,7 @@
       "name": "tests",
       "dependencies": {
         "@repo/common": "workspace:*",
+        "@repo/db": "workspace:*",
         "axios": "^1.16.1",
       },
       "devDependencies": {

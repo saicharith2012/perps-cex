@@ -1,13 +1,32 @@
 import axios, { AxiosError } from "axios";
-import { beforeAll, describe, expect, it } from "bun:test";
+import { beforeEach, describe, expect, it } from "bun:test";
 import { backendUrl } from "./config";
 import type { CreateOrderResponse } from "@repo/common/engineTypes";
+import prisma from "@repo/db/client";
 
 describe("testing /api/v1/orders - create order endpoint", () => {
+  let adminToken = "";
   let user1Token = "";
   let user2Token = "";
-  let marketId = "";
-  beforeAll(async () => {
+  beforeEach(async () => {
+    try {
+      // reset db
+      await prisma.$executeRaw`
+        TRUNCATE TABLE
+          "User",
+          "Market"
+        CASCADE
+      `;
+
+      console.log("db reset done.")
+    } catch (error) {
+      console.log(
+        error instanceof Error
+          ? error.message
+          : "error while resetting db data.",
+      );
+    }
+
     try {
       const adminUsername = `admin-${Math.random()}`;
       const adminPassword = "admin1234";
@@ -34,21 +53,46 @@ describe("testing /api/v1/orders - create order endpoint", () => {
         `admin signed in: ${JSON.stringify(adminSigninResponse.data)}`,
       );
 
-      // create market
-      const market = await axios.post(
-        `${backendUrl}/api/v1/market`,
-        {
-          marketId: `BTC_USDT-${Math.random()}`,
-          imageUrl: "url",
-        },
+      adminToken = adminSigninResponse.data.token;
+    } catch (error) {
+      console.log(
+        `admin created failed ${error instanceof Error ? `:${error.message}` : ""}`,
+      );
+    }
+
+    // reset engine
+    try {
+      const resetResponse = await axios.post(
+        `${backendUrl}/api/v1/reset`,
+        {},
         {
           headers: {
-            Authorization: `Bearer ${adminSigninResponse.data.token}`,
+            Authorization: `Bearer ${adminToken}`,
           },
         },
       );
 
-      marketId = market.data.marketId;
+      console.log(`reset succesful: ${JSON.stringify(resetResponse.data)}`);
+    } catch (error) {
+      console.log(
+        error instanceof Error ? error.message : "engine reset failed.",
+      );
+    }
+
+    try {
+      // create market
+      const market = await axios.post(
+        `${backendUrl}/api/v1/market`,
+        {
+          marketId: `BTC_USDT`,
+          imageUrl: "url",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${adminToken}`,
+          },
+        },
+      );
 
       console.log(`market created: ${JSON.stringify(market.data)}`);
 
@@ -125,7 +169,7 @@ describe("testing /api/v1/orders - create order endpoint", () => {
         `balance onramped for user 2: ${JSON.stringify(onrampForUser2.data)}`,
       );
     } catch (error) {
-      console.log(error instanceof AxiosError ? error.message : "error");
+      console.log(error instanceof AxiosError ? error.message : "error ");
     }
   });
 
@@ -134,7 +178,7 @@ describe("testing /api/v1/orders - create order endpoint", () => {
       const response = await axios.post(
         `${backendUrl}/api/v1/orders`,
         {
-          marketId: marketId,
+          marketId: "BTC_USDT",
           side: "BUY",
           type: "LIMIT",
           price: 100,
