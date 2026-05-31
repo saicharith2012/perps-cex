@@ -11,6 +11,7 @@ import {
   listenForResponsesFromEngine,
   pingRedis,
 } from "./utils/engine-client";
+import { authenticateUser, authorizeAdmin } from "./middleware/auth.middleware";
 
 const app = express();
 

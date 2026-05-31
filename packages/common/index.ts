@@ -13,6 +13,8 @@ export type OrderStatus = "OPEN" | "PARTIALLY_FILLED" | "FILLED" | "CANCELLED";
 
 export type PositionType = "SHORT" | "LONG";
 
+export type RestingOrderType = "ASK" | "BID" | null;
+
 export type OnrampBalanceInput = {
   userId: string;
   amount: string;
@@ -71,6 +73,7 @@ export type CreateMarketResponse = {
 export type CreateOrderResponse = {
   message: string;
   orderId: string;
+  restingOrderType: RestingOrderType;
   userId: string;
   marketId: string;
   averagePrice: number;
@@ -78,7 +81,8 @@ export type CreateOrderResponse = {
   remainingQty: number;
   filledQty: number;
   fills: Fill[];
-  position: Position[];
+  makerPosition: Position | null;
+  takerPosition: Position | null;
 };
 
 export type EngineResponse = {
@@ -149,9 +153,9 @@ export type Fill = {
   maker: string;
   taker: string;
   marketId: string;
-  qty: string;
-  price: string;
+  qty: number;
+  price: number;
   makerOrderId: string;
   takerOrderId: string;
-  createdAt: string;
+  createdAt: number;
 };

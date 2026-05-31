@@ -1,5 +1,5 @@
 import type { RequestHandler } from "express";
-import { authSchema } from "../types/authSchema";
+import { signinSchema, signupSchema } from "../types/authSchema";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { jwtSecret } from "../utils/env";
@@ -10,7 +10,7 @@ import { EngineCommandType } from "@repo/common/engineTypes";
 
 export const signup: RequestHandler = async (req, res) => {
   try {
-    const parsedBody = authSchema.safeParse(req.body);
+    const parsedBody = signupSchema.safeParse(req.body);
 
     if (!parsedBody.success) {
       sendValidationError(res, parsedBody.error);
@@ -18,7 +18,7 @@ export const signup: RequestHandler = async (req, res) => {
       return;
     }
 
-    const { username, password } = parsedBody.data;
+    const { username, password, isAdmin } = parsedBody.data;
 
     const userAlreadyExists = await prisma.user.findUnique({
       where: {
@@ -38,6 +38,7 @@ export const signup: RequestHandler = async (req, res) => {
       data: {
         username,
         password: hashedPassword,
+        role: isAdmin ? "ADMIN" : "USER",
         positions: {
           create: [],
         },
@@ -81,7 +82,7 @@ export const signup: RequestHandler = async (req, res) => {
 
 export const signin: RequestHandler = async (req, res) => {
   try {
-    const parsedBody = authSchema.safeParse(req.body);
+    const parsedBody = signinSchema.safeParse(req.body);
 
     if (!parsedBody.success) {
       sendValidationError(res, parsedBody.error);

@@ -1,10 +1,15 @@
 import type {
   CreateOrderInput,
+  CreateOrderResponse,
   EngineResponse,
   Fill,
   Orders,
 } from "@repo/common/engineTypes";
 import { BALANCES, ORDERBOOKS } from "../store/engineStore";
+import {
+  calculateAveragePrice,
+  calculateTotalFilledQty,
+} from "../utils/aggregateFills";
 
 export function createOrder(
   payload: CreateOrderInput,
@@ -25,6 +30,21 @@ export function createOrder(
 
   const userBalance = BALANCES.get(userId);
   let orderQty = qty;
+
+  const newOrderResponse: CreateOrderResponse = {
+    message: "",
+    orderId,
+    userId,
+    marketId,
+    averagePrice: 0,
+    status: "OPEN",
+    remainingQty: orderQty,
+    filledQty: qty - orderQty,
+    fills: [],
+    makerPosition: null,
+    takerPosition: null,
+    restingOrderType: null,
+  };
 
   if (!userBalance) {
     return {
@@ -50,7 +70,7 @@ export function createOrder(
 
   const asks = orderbook.asks;
   const bids = orderbook.bids;
-  const Fills: Fill[] = [];
+  const fills: Fill[] = [];
 
   if (type === "LIMIT") {
     if (!price) {
@@ -96,8 +116,8 @@ export function createOrder(
 
       if (asks.size === 0) {
         console.log("no asks to match, creating a new bid order...");
-        bids.set(price, {
-          availableQty: bids.get(price)?.availableQty ?? 0 + orderQty,
+        const updatedBidsAtGivenPrice: Orders = {
+          availableQty: (bids.get(price)?.availableQty ?? 0) + orderQty,
           openOrders: [
             ...(bids.get(price)?.openOrders ?? []),
             {
@@ -108,25 +128,21 @@ export function createOrder(
               createdAt: Date.now(),
             },
           ],
-        });
+        };
+        bids.set(price, updatedBidsAtGivenPrice);
 
         console.log("added it to the bids side of the orderbook.");
 
-        console.log(`ORDERBOOK: ${JSON.stringify(ORDERBOOKS.get(marketId))}`);
+        console.log(
+          `bids: ${JSON.stringify([...ORDERBOOKS.get(marketId)?.bids!])}`,
+        );
+
+        newOrderResponse.message =
+          "No Asks to match, LIMIT order added to bids on the orderbook.";
+        newOrderResponse.restingOrderType = "BID";
 
         return {
-          data: {
-            message: "LIMIT order added to bids on the orderbook.",
-            orderId: payload.orderId,
-            userId: payload.userId,
-            marketId: payload.marketId,
-            averagePrice: 0,
-            status: "OPEN",
-            remainingQty: 0,
-            filledQty: 0,
-            fills: [],
-            position: [],
-          },
+          data: newOrderResponse,
           ok: true,
           correlationId,
         };
@@ -134,9 +150,12 @@ export function createOrder(
 
       // sort the orders on the asks based on prices
       orderbook.asks = new Map([...asks.entries()].sort((a, b) => a[0] - b[0]));
+      console.log(`asks available: ${JSON.stringify([...orderbook.asks])}`);
 
-      for (const [askPrice, orders] of asks) {
+      for (const [askPrice, orders] of orderbook.asks) {
         const restingOrders = orders.openOrders;
+        console.log(`ask price is: ${askPrice}`);
+        console.log(JSON.stringify(restingOrders));
 
         if (restingOrders.length === 0) {
           asks.delete(askPrice);
@@ -144,20 +163,48 @@ export function createOrder(
         }
 
         if (askPrice <= price && orderQty > 0) {
-          for (const ro of restingOrders) {
-            if (ro.qty === orderQty) {
-              // create the fills for both resting ask order and limit buy order
+          for (const restingOrder of restingOrders) {
+            if (restingOrder.qty === orderQty) {
+              // create the fill
               // remove the resting ask order from the orderbook
               // calculate net position for the buy order
               // calculate net position for the resting ask order
               // break
-            } else if (ro.qty > orderQty) {
+
+              fills.push({
+                fillId: crypto.randomUUID(),
+                maker: restingOrder.userId,
+                taker: userId,
+                marketId,
+                qty: restingOrder.qty,
+                price: askPrice,
+                makerOrderId: restingOrder.orderId,
+                takerOrderId: orderId,
+                createdAt: Date.now(),
+              });
+
+              orderQty = 0;
+
+              orders.availableQty -= restingOrder.qty;
+
+              orders.openOrders = restingOrders.filter(
+                (ro) => ro.orderId !== restingOrder.orderId,
+              );
+
+              console.log(
+                `asks after trade: ${JSON.stringify([...orderbook.asks])}`,
+              );
+              console.log(
+                `bids after trade: ${JSON.stringify([...orderbook.bids])}`,
+              );
+              break;
+            } else if (restingOrder.qty > orderQty) {
               // create the fill for the limit buy order and partial fill for the resting ask order
               // edit the ask order with remaining qty as open order on the orderbook
               // calculate net position for the limit buy order
               // calculate net position for the resting ask order
               // break
-            } else if (ro.qty < orderQty) {
+            } else if (restingOrder.qty < orderQty) {
               // create fill for the resting ask order and partial fill for the limit buy order
               // remove the resting ask order from the orderbook
               // calculate net position for the resting ask order
@@ -173,14 +220,29 @@ export function createOrder(
         } else if (orderQty === 0) {
           // fill the response object with details corresponding to fully filled order
           // break the loop
+
+          const totalFilledQty = calculateTotalFilledQty(fills);
+          console.log(`total filled qty is: ${totalFilledQty}`);
+
+          const averagePrice = calculateAveragePrice(fills);
+          console.log(`averagePrice is ${averagePrice}`);
+          newOrderResponse.message = `Order filled successfully. your position moved towards long by ${qty} ${marketId}`;
+          newOrderResponse.averagePrice = averagePrice;
+          newOrderResponse.status = "FILLED";
+          newOrderResponse.remainingQty = orderQty;
+          newOrderResponse.filledQty = totalFilledQty;
+          newOrderResponse.fills = fills;
+
+          break;
         }
       }
     } else if (side === "SELL") {
       // if there are no bids to match
       if (bids.size === 0) {
         console.log("no bids to match, creating a new ask order...");
-        asks.set(price, {
-          availableQty: asks.get(price)?.availableQty ?? 0 + orderQty,
+
+        const updatedAsksAtGivenPrice: Orders = {
+          availableQty: (asks.get(price)?.availableQty ?? 0) + orderQty,
           openOrders: [
             ...(asks.get(price)?.openOrders ?? []),
             {
@@ -191,25 +253,20 @@ export function createOrder(
               createdAt: Date.now(),
             },
           ],
-        });
+        };
+        asks.set(price, updatedAsksAtGivenPrice);
 
         console.log("added it to the asks side of the orderbook.");
 
-        console.log(`ORDERBOOK: ${ORDERBOOKS.get(marketId)}`);
+        console.log(
+          `asks: ${JSON.stringify([...ORDERBOOKS.get(marketId)?.asks!])}`,
+        );
 
+        newOrderResponse.message =
+          "No bids to match, LIMIT order added to asks on the orderbook.";
+        newOrderResponse.restingOrderType = "ASK";
         return {
-          data: {
-            message: "LIMIT order added to asks on the orderbook.",
-            orderId: payload.orderId,
-            userId: payload.userId,
-            marketId: payload.marketId,
-            averagePrice: 0,
-            status: "OPEN",
-            remainingQty: 0,
-            filledQty: 0,
-            fills: [],
-            position: [],
-          },
+          data: newOrderResponse,
           ok: true,
           correlationId,
         };
@@ -217,18 +274,7 @@ export function createOrder(
     }
   }
   return {
-    data: {
-      message: "order logic not written yet. wait for a while.",
-      orderId: payload.orderId,
-      userId: payload.userId,
-      marketId: payload.marketId,
-      averagePrice: 0,
-      status: "OPEN",
-      remainingQty: 0,
-      filledQty: 0,
-      fills: [],
-      position: [],
-    },
+    data: newOrderResponse,
     ok: true,
     correlationId,
   };
